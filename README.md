@@ -16,7 +16,7 @@ put transfuse figure here
 Any Nvidia GPU of memory>=4G shall be sufficient for this experiment
 
 1. Preparing necessary data:
-	+ downloading ISIC2017 training, validation and testing data from the [download link (official site)](https://challenge.isic-archive.com/data), put the unzipped data in `./data`;
+	+ downloading ISIC2017 training, validation and testing data from the [official site](https://challenge.isic-archive.com/data), put the unzipped data in `./data`;
 	+ run 'process.py' to preprocess all the data, which generates `data_{train, val, test}.npy` and `mask_{train, val, test}.npy`.
 
 2. Downloading pretrained models:
