@@ -1,7 +1,6 @@
 import numpy as np
 import cv2
 import os
-import pdb
 
 root = 'data/' # change to your data folder path
 data_f = ['ISIC-2017_Training_Data/', 'ISIC-2017_Validation_Data/', 'ISIC-2017_Test_v2_Data/']
