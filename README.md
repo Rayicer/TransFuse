@@ -20,15 +20,13 @@ Any Nvidia GPU of memory>=4G shall be sufficient for this experiment.
 	+ run `process.py` to preprocess all the data, which generates `data_{train, val, test}.npy` and `mask_{train, val, test}.npy`.
 	+ alternatively, the processed data is provided here.
 
-2. Downloading pretrained models:
-	+ downloading DeiT-small from [DeiT repo](https://github.com/facebookresearch/deit) to `./pretrained`.
-	+ downloading resnet-34 from [timm Pytorch](https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/resnet34-43635321.pth) to `./pretrained`.
-	+ (Optional) downloading our trained TransFuse-S from here to `./snapshots/`.
-
-3. Testing:
+2. Testing:
+	+ downloading our trained TransFuse-S from here to `./snapshots/`.
 	+ run `test_isic.py --ckpt_path='snapshots/TransFuse-19.pth'`
 
-4. Training:
+3. Training:
+	+ downloading DeiT-small from [DeiT repo](https://github.com/facebookresearch/deit) to `./pretrained`.
+	+ downloading resnet-34 from [timm Pytorch](https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/resnet34-43635321.pth) to `./pretrained`.
 	+ run `train_isic.py`; you may also want to change the default saving path or other hparams.
 
 ## Reference
