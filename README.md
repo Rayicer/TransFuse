@@ -41,13 +41,15 @@ Some of the codes in this repo are borrowed from:
 
 ## Citation
 Please consider citing us if you find this work helpful:
+
+```bibtex
 @article{zhang2021transfuse,
   title={TransFuse: Fusing Transformers and CNNs for Medical Image Segmentation},
   author={Zhang, Yundong and Liu, Huiye and Hu, Qiang},
   journal={arXiv preprint arXiv:2102.08005},
   year={2021}
 }
-
+```
 
 ## Questions
 Please drop an email to huiyeliu@rayicer.com
