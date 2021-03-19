@@ -18,6 +18,7 @@ Any Nvidia GPU of memory>=4G shall be sufficient for this experiment.
 1. Preparing necessary data:
 	+ downloading ISIC2017 training, validation and testing data from the [official site](https://challenge.isic-archive.com/data), put the unzipped data in `./data`.
 	+ run `process.py` to preprocess all the data, which generates `data_{train, val, test}.npy` and `mask_{train, val, test}.npy`.
+	+ alternatively, the processed data is provided here.
 
 2. Downloading pretrained models:
 	+ downloading DeiT-small from [DeiT repo](https://github.com/facebookresearch/deit) to `./pretrained`.
@@ -35,7 +36,6 @@ Some of the codes in this repo are borrowed from:
 * [Facebook DeiT](https://github.com/facebookresearch/deit)
 * [timm repo](https://github.com/rwightman/pytorch-image-models)
 * [PraNet repo](https://github.com/DengPingFan/PraNet)
-* [Hardnet-MSEG repo](https://github.com/james128333/HarDNet-MSEG)
 * [Image_Segmentation](https://github.com/LeeJunHyun/Image_Segmentation)
 
 
