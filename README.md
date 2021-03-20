@@ -16,7 +16,7 @@ This repo holds the code of TransFuse: Fusing Transformers and CNNs for Medical 
 ## Experiments
 
 ### ISIC2017 Skin Lesion Segmentation Challenge
-Any Nvidia GPU of memory>=4G shall be sufficient for this experiment. 
+GPUs of memory>=4G shall be sufficient for this experiment. 
 
 1. Preparing necessary data:
 	+ downloading ISIC2017 training, validation and testing data from the [official site](https://challenge.isic-archive.com/data), put the unzipped data in `./data`.
