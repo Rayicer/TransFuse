@@ -8,8 +8,8 @@ from utils.utils import AvgMeter
 import torch.nn.functional as F
 import numpy as np
 import matplotlib.pyplot as plt
-from MyTest import mean_dice_np, mean_iou_np
-
+from test_isic import mean_dice_np, mean_iou_np
+import os
 
 def structure_loss(pred, mask):
     weit = 1 + 5*torch.abs(F.avg_pool2d(mask, kernel_size=31, stride=1, padding=15) - mask)
