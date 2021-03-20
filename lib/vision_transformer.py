@@ -25,7 +25,6 @@ from timm.models.helpers import load_pretrained
 from timm.models.registry import register_model
 from timm.models.layers import DropPath, to_2tuple, trunc_normal_
 
-import pdb
 
 
 def _cfg(url='', **kwargs):

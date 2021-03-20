@@ -6,7 +6,6 @@ from scipy import misc
 from lib.TransFuse import TransFuse_S
 from utils.dataloader import test_dataset
 import imageio
-import pdb
 
 
 def mean_iou_np(y_true, y_pred, **kwargs):
