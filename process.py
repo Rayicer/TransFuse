@@ -39,5 +39,5 @@ for j in range(3):
 			print(count)
 
 
-	np.save('data_{}.npy'.format(save_name[j]), imgs)
-	np.save('mask_{}.npy'.format(save_name[j]), masks)
+	np.save('{}/data_{}.npy'.format(root, save_name[j]), imgs)
+	np.save('{}/mask_{}.npy'.format(root, save_name[j]), masks)

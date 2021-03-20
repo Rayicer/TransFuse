@@ -6,6 +6,9 @@ bin-release/
 
 # Other files and folders
 .settings/
+data/
+pretrained/
+snapshots/
 
 # Executables
 *.swf
