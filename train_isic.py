@@ -121,7 +121,7 @@ def test(model, path):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--epoch', type=int, default=30, help='epoch number')
+    parser.add_argument('--epoch', type=int, default=25, help='epoch number')
     parser.add_argument('--lr', type=float, default=7e-5, help='learning rate')
     parser.add_argument('--batchsize', type=int, default=16, help='training batch size')
     parser.add_argument('--grad_norm', type=float, default=5.0, help='gradient clipping norm')
