@@ -32,6 +32,12 @@ GPUs of memory>=4G shall be sufficient for this experiment.
 	+ downloading resnet-34 from [timm Pytorch](https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/resnet34-43635321.pth) to `./pretrained`.
 	+ run `train_isic.py`; you may also want to change the default saving path or other hparams as well.
 
+
+### Polyp Segmentation
+Polyp experiments are conducted on a single Nvidia-A100 GPU. Data can be found in [PraNet Repo](https://github.com/DengPingFan/PraNet). Training code is comming soon.
+
+
+
 ## Reference
 Some of the codes in this repo are borrowed from:
 * [Facebook DeiT](https://github.com/facebookresearch/deit)
