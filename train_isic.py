@@ -123,7 +123,7 @@ if __name__ == '__main__':
     parser.add_argument('--epoch', type=int, default=25, help='epoch number')
     parser.add_argument('--lr', type=float, default=7e-5, help='learning rate')
     parser.add_argument('--batchsize', type=int, default=16, help='training batch size')
-    parser.add_argument('--grad_norm', type=float, default=5.0, help='gradient clipping norm')
+    parser.add_argument('--grad_norm', type=float, default=2.0, help='gradient clipping norm')
     parser.add_argument('--train_path', type=str,
                         default='data/', help='path to train dataset')
     parser.add_argument('--test_path', type=str,
