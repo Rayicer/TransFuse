@@ -94,8 +94,7 @@ def test(model, path):
             image = image.cuda()
 
             with torch.no_grad():
-                _, res3, res2 = model(image)
-            res = res2
+                _, _, res = model(image)
             loss = structure_loss(res, torch.tensor(gt).unsqueeze(0).unsqueeze(0).cuda())
 
             res = res.sigmoid().data.cpu().numpy().squeeze()
@@ -111,8 +110,9 @@ def test(model, path):
             iou_bank.append(iou)
             acc_bank.append(acc)
             
-        print('{} Loss: {:.4f}, Dice: {:.4f}, IoU: {:.4f}, Acc: {:.4f}, Val_Loss: {:.4f}'.
+        print('{} Loss: {:.4f}, Dice: {:.4f}, IoU: {:.4f}, Acc: {:.4f}'.
             format(s, np.mean(loss_bank), np.mean(dice_bank), np.mean(iou_bank), np.mean(acc_bank)))
+
         mean_loss.append(np.mean(loss_bank))
 
     return mean_loss[0] 
