@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 from test_isic import mean_dice_np, mean_iou_np
 import os
 
+
 def structure_loss(pred, mask):
     weit = 1 + 5*torch.abs(F.avg_pool2d(mask, kernel_size=31, stride=1, padding=15) - mask)
     wbce = F.binary_cross_entropy_with_logits(pred, mask, reduction='none')
@@ -61,7 +62,6 @@ def train(train_loader, model, optimizer, epoch, best_loss):
                   format(datetime.now(), epoch, opt.epoch, i, total_step,
                          loss_record2.show(), loss_record3.show(), loss_record4.show()))
 
-
     save_path = 'snapshots/{}/'.format(opt.train_save)
     os.makedirs(save_path, exist_ok=True)
     if (epoch+1) % 1 == 0:
@@ -94,9 +94,8 @@ def test(model, path):
             image = image.cuda()
 
             with torch.no_grad():
-                _, _, res2 = model(image)
+                _, res3, res2 = model(image)
             res = res2
-
             loss = structure_loss(res, torch.tensor(gt).unsqueeze(0).unsqueeze(0).cuda())
 
             res = res.sigmoid().data.cpu().numpy().squeeze()
@@ -112,7 +111,7 @@ def test(model, path):
             iou_bank.append(iou)
             acc_bank.append(acc)
             
-        print('{} Loss: {:.4f}, Dice: {:.4f}, IoU: {:.4f}, Acc: {:.4f}'.
+        print('{} Loss: {:.4f}, Dice: {:.4f}, IoU: {:.4f}, Acc: {:.4f}, Val_Loss: {:.4f}'.
             format(s, np.mean(loss_bank), np.mean(dice_bank), np.mean(iou_bank), np.mean(acc_bank)))
         mean_loss.append(np.mean(loss_bank))
 
@@ -140,7 +139,6 @@ if __name__ == '__main__':
     params = model.parameters()
     optimizer = torch.optim.Adam(params, opt.lr, betas=(opt.beta1, opt.beta2))
      
-
     image_root = '{}/data_train.npy'.format(opt.train_path)
     gt_root = '{}/mask_train.npy'.format(opt.train_path)
 
@@ -152,4 +150,3 @@ if __name__ == '__main__':
     best_loss = 1e5
     for epoch in range(1, opt.epoch + 1):
         best_loss = train(train_loader, model, optimizer, epoch, best_loss)
-

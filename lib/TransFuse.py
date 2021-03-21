@@ -6,6 +6,7 @@ from torch.nn import CrossEntropyLoss, Dropout, Softmax, Linear, Conv2d, LayerNo
 import torch.nn.functional as F
 import numpy as np
 import math
+from timm.models.layers import DropPath, to_2tuple, trunc_normal_
 
 
 class ChannelPool(nn.Module):
@@ -79,7 +80,7 @@ class TransFuse_S(nn.Module):
 
         self.transformer = deit(pretrained=pretrained)
 
-        self.up1 = Up(384, 128)
+        self.up1 = Up(in_ch1=384, out_ch=128)
         self.up2 = Up(128, 64)
 
         self.final_x = nn.Sequential(
@@ -101,10 +102,10 @@ class TransFuse_S(nn.Module):
         self.up_c = BiFusion_block(ch_1=256, ch_2=384, r_2=4, ch_int=256, ch_out=256, drop_rate=drop_rate/2)
 
         self.up_c_1_1 = BiFusion_block(ch_1=128, ch_2=128, r_2=2, ch_int=128, ch_out=128, drop_rate=drop_rate/2)
-        self.up_c_1_2 = Up(256+128, 128, attn=True)
+        self.up_c_1_2 = Up(in_ch1=256, out_ch=128, in_ch2=128, attn=True)
 
         self.up_c_2_1 = BiFusion_block(ch_1=64, ch_2=64, r_2=1, ch_int=64, ch_out=64, drop_rate=drop_rate/2)
-        self.up_c_2_2 = Up(128+64, 64, attn=True)
+        self.up_c_2_2 = Up(128, 64, 64, attn=True)
 
         self.drop = nn.Dropout2d(drop_rate)
 
@@ -175,13 +176,18 @@ def init_weights(m):
     :return: None
     """
     if isinstance(m, nn.Conv2d):
-        #nn.init.normal_(m.weight, std=0.001)
+        '''
+        fan_in, _ = nn.init._calculate_fan_in_and_fan_out(m.weight)
+        trunc_normal_(m.weight, std=math.sqrt(1.0/fan_in)/.87962566103423978)
+        if m.bias is not None:
+            nn.init.zeros_(m.bias)
+        '''
         nn.init.kaiming_normal_(m.weight, mode='fan_in', nonlinearity='relu')
         if m.bias is not None:
             fan_in, _ = nn.init._calculate_fan_in_and_fan_out(m.weight)
             bound = 1 / math.sqrt(fan_in)
             nn.init.uniform_(m.bias, -bound, bound)
-
+        
     elif isinstance(m, nn.BatchNorm2d):
         nn.init.constant_(m.weight, 1)
         nn.init.constant_(m.bias, 0)
@@ -189,20 +195,19 @@ def init_weights(m):
 
 class Up(nn.Module):
     """Upscaling then double conv"""
-    def __init__(self, in_channels, out_channels, bilinear=True, attn=False):
+    def __init__(self, in_ch1, out_ch, in_ch2=0, attn=False):
         super().__init__()
 
-        if bilinear:
-            self.up = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
-        else:
-            self.up = nn.ConvTranspose2d(in_channels // 2, in_channels // 2, kernel_size=2, stride=2)
-
-        self.conv = DoubleConv(in_channels, out_channels)
+        self.up = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
+        self.conv = DoubleConv(in_ch1+in_ch2, out_ch)
 
         if attn:
-            self.attn_block = Attention_block(out_channels*2, out_channels, out_channels)
+            self.attn_block = Attention_block(in_ch1, in_ch2, out_ch)
+        else:
+            self.attn_block = None
 
     def forward(self, x1, x2=None):
+
         x1 = self.up(x1)
         # input is CHW
         if x2 is not None:
@@ -226,18 +231,15 @@ class Attention_block(nn.Module):
             nn.Conv2d(F_g, F_int, kernel_size=1,stride=1,padding=0,bias=True),
             nn.BatchNorm2d(F_int)
             )
-        
         self.W_x = nn.Sequential(
             nn.Conv2d(F_l, F_int, kernel_size=1,stride=1,padding=0,bias=True),
             nn.BatchNorm2d(F_int)
         )
-
         self.psi = nn.Sequential(
             nn.Conv2d(F_int, 1, kernel_size=1,stride=1,padding=0,bias=True),
             nn.BatchNorm2d(1),
             nn.Sigmoid()
         )
-        
         self.relu = nn.ReLU(inplace=True)
         
     def forward(self,g,x):

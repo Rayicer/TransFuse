@@ -16,7 +16,7 @@ def mean_iou_np(y_true, y_pred, **kwargs):
     mask_sum = np.sum(np.abs(y_true), axis=axes) + np.sum(np.abs(y_pred), axis=axes)
     union = mask_sum  - intersection 
     
-    smooth =  .001
+    smooth = .001
     iou = (intersection + smooth) / (union + smooth)
     return iou
 
@@ -28,12 +28,10 @@ def mean_dice_np(y_true, y_pred, **kwargs):
     axes = (0, 1) # W,H axes of each image
     intersection = np.sum(np.abs(y_pred * y_true), axis=axes) 
     mask_sum = np.sum(np.abs(y_true), axis=axes) + np.sum(np.abs(y_pred), axis=axes)
-    union = mask_sum  - intersection 
     
-    smooth =  .001
+    smooth = .001
     dice = 2*(intersection + smooth)/(mask_sum + smooth)
     return dice
-
 
 
 if __name__ == '__main__':
