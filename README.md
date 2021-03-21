@@ -25,7 +25,7 @@ GPUs of memory>=4G shall be sufficient for this experiment.
 
 2. Testing:
 	+ downloading our trained TransFuse-S from [Baidu Pan, pw:xd74](https://pan.baidu.com/s/1khwcCcTgwporZJcaTWedRg) or [Google Drive](https://drive.google.com/file/d/1hv1mfFkWEdYCR0FHPokovlf7OAFsnKgY/view?usp=sharing) to `./snapshots/`.
-	+ run `test_isic.py --ckpt_path='snapshots/TransFuse-19_best.pth'`. This is our best model and you should see mean IoU of ~0.8.
+	+ run `test_isic.py --ckpt_path='snapshots/TransFuse-19_best.pth'`.
 
 3. Training:
 	+ downloading DeiT-small from [DeiT repo](https://github.com/facebookresearch/deit) to `./pretrained`.
