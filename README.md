@@ -34,7 +34,7 @@ GPUs of memory>=4G shall be sufficient for this experiment.
 
 
 ### Polyp Segmentation
-Polyp experiments are conducted on a single Nvidia-A100 GPU. Data can be found in [PraNet Repo](https://github.com/DengPingFan/PraNet). Training code is comming soon.
+Polyp experiments are conducted on a single Nvidia-A100 GPU. Data can be found in [PraNet Repo](https://github.com/DengPingFan/PraNet). Code is comming soon.
 
 
 
