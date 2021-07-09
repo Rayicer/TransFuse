@@ -33,9 +33,7 @@ GPUs of memory>=4G shall be sufficient for this experiment.
 	+ run `train_isic.py`; you may also want to change the default saving path or other hparams as well.
 
 
-### Polyp Segmentation
-Polyp experiments are conducted on a single Nvidia-A100 GPU. Data can be found in [PraNet Repo](https://github.com/DengPingFan/PraNet). Code is comming soon.
-
+Code of other tasks will be comming soon.
 
 
 ## Reference
