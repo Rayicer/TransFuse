@@ -2,7 +2,7 @@ import torch
 import torch.nn.functional as F
 import numpy as np
 import os, argparse
-from lib.TransFuse import TransFuse_S
+from lib.TransFuse import TransFuse_S, TransFuse_L, TransFuse_L_384
 from utils.dataloader import test_dataset
 import imageio
 

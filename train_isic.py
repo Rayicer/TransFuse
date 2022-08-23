@@ -2,7 +2,7 @@ import torch
 from torch.autograd import Variable
 import argparse
 from datetime import datetime
-from lib.TransFuse import TransFuse_S
+from lib.TransFuse import TransFuse_S, TransFuse_L, TransFuse_L_384
 from utils.dataloader import get_loader, test_dataset
 from utils.utils import AvgMeter
 import torch.nn.functional as F

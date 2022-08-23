@@ -1,7 +1,10 @@
 import torch
 import torch.nn as nn
-from torchvision.models import resnet34 as resnet
+from torchvision.models import resnet34
+from torchvision.models import resnet50
 from .DeiT import deit_small_patch16_224 as deit
+from .DeiT import deit_base_patch16_224 as deit_base
+from .DeiT import deit_base_patch16_384 as deit_base_384
 from torch.nn import CrossEntropyLoss, Dropout, Softmax, Linear, Conv2d, LayerNorm
 import torch.nn.functional as F
 import numpy as np
@@ -72,7 +75,7 @@ class TransFuse_S(nn.Module):
     def __init__(self, num_classes=1, drop_rate=0.2, normal_init=True, pretrained=False):
         super(TransFuse_S, self).__init__()
 
-        self.resnet = resnet()
+        self.resnet = resnet34()
         if pretrained:
             self.resnet.load_state_dict(torch.load('pretrained/resnet34-333f7ec4.pth'))
         self.resnet.fc = nn.Identity()
@@ -150,9 +153,217 @@ class TransFuse_S(nn.Module):
         x_c_2 = self.up_c_2_2(x_c_1, x_c_2_1) # joint predict low supervise here
 
         # decoder part
-        map_x = F.interpolate(self.final_x(x_c), scale_factor=16, mode='bilinear')
-        map_1 = F.interpolate(self.final_1(x_b_2), scale_factor=4, mode='bilinear')
-        map_2 = F.interpolate(self.final_2(x_c_2), scale_factor=4, mode='bilinear')
+        map_x = F.interpolate(self.final_x(x_c), scale_factor=16, mode='bilinear', align_corners=True)
+        map_1 = F.interpolate(self.final_1(x_b_2), scale_factor=4, mode='bilinear', align_corners=True)
+        map_2 = F.interpolate(self.final_2(x_c_2), scale_factor=4, mode='bilinear', align_corners=True)
+        return map_x, map_1, map_2
+
+    def init_weights(self):
+        self.up1.apply(init_weights)
+        self.up2.apply(init_weights)
+        self.final_x.apply(init_weights)
+        self.final_1.apply(init_weights)
+        self.final_2.apply(init_weights)
+        self.up_c.apply(init_weights)
+        self.up_c_1_1.apply(init_weights)
+        self.up_c_1_2.apply(init_weights)
+        self.up_c_2_1.apply(init_weights)
+        self.up_c_2_2.apply(init_weights)
+
+
+class TransFuse_L(nn.Module):
+    def __init__(self, num_classes=1, drop_rate=0.2, normal_init=True, pretrained=False):
+        super(TransFuse_L, self).__init__()
+
+        self.resnet = resnet50()
+        if pretrained:
+            self.resnet.load_state_dict(torch.load('pretrained/resnet50-19c8e357.pth'))
+        self.resnet.fc = nn.Identity()
+        self.resnet.layer4 = nn.Identity()
+
+        self.transformer = deit_base(pretrained=pretrained)
+
+        self.up1 = Up(in_ch1=768, out_ch=512)
+        self.up2 = Up(512, 256)
+
+        self.final_x = nn.Sequential(
+            Conv(1024, 256, 1, bn=True, relu=True),
+            Conv(256, 256, 3, bn=True, relu=True),
+            Conv(256, num_classes, 3, bn=False, relu=False)
+            )
+
+        self.final_1 = nn.Sequential(
+            Conv(256, 256, 3, bn=True, relu=True),
+            Conv(256, num_classes, 3, bn=False, relu=False)
+            )
+
+        self.final_2 = nn.Sequential(
+            Conv(256, 256, 3, bn=True, relu=True),
+            Conv(256, num_classes, 3, bn=False, relu=False)
+            )
+
+        self.up_c = BiFusion_block(ch_1=1024, ch_2=768, r_2=4, ch_int=1024, ch_out=1024, drop_rate=drop_rate/2)
+
+        self.up_c_1_1 = BiFusion_block(ch_1=512, ch_2=512, r_2=2, ch_int=512, ch_out=512, drop_rate=drop_rate/2)
+        self.up_c_1_2 = Up(in_ch1=1024, out_ch=512, in_ch2=512, attn=True)
+
+        self.up_c_2_1 = BiFusion_block(ch_1=256, ch_2=256, r_2=1, ch_int=256, ch_out=256, drop_rate=drop_rate/2)
+        self.up_c_2_2 = Up(512, 256, 256, attn=True)
+
+        self.drop = nn.Dropout2d(drop_rate)
+
+        if normal_init:
+            self.init_weights()
+
+    def forward(self, imgs, labels=None):
+        # bottom-up path
+        x_b = self.transformer(imgs)
+        x_b = torch.transpose(x_b, 1, 2)
+        x_b = x_b.view(x_b.shape[0], -1, 12, 16)
+        x_b = self.drop(x_b)
+
+        x_b_1 = self.up1(x_b)
+        x_b_1 = self.drop(x_b_1)
+
+        x_b_2 = self.up2(x_b_1)  # transformer pred supervise here
+        x_b_2 = self.drop(x_b_2)
+
+
+        # top-down path
+        x_u = self.resnet.conv1(imgs)
+        x_u = self.resnet.bn1(x_u)
+        x_u = self.resnet.relu(x_u)
+        x_u = self.resnet.maxpool(x_u)
+
+        x_u_2 = self.resnet.layer1(x_u)
+        x_u_2 = self.drop(x_u_2)
+
+        x_u_1 = self.resnet.layer2(x_u_2)
+        x_u_1 = self.drop(x_u_1)
+
+        x_u = self.resnet.layer3(x_u_1)
+        x_u = self.drop(x_u)
+
+
+        # joint path
+        x_c = self.up_c(x_u, x_b)
+
+        x_c_1_1 = self.up_c_1_1(x_u_1, x_b_1)
+        x_c_1 = self.up_c_1_2(x_c, x_c_1_1)
+
+        x_c_2_1 = self.up_c_2_1(x_u_2, x_b_2)
+        x_c_2 = self.up_c_2_2(x_c_1, x_c_2_1) # joint predict low supervise here
+
+
+        # decoder part
+        map_x = F.interpolate(self.final_x(x_c), scale_factor=16, mode='bilinear', align_corners=True)
+        map_1 = F.interpolate(self.final_1(x_b_2), scale_factor=4, mode='bilinear', align_corners=True)
+        map_2 = F.interpolate(self.final_2(x_c_2), scale_factor=4, mode='bilinear', align_corners=True)
+
+        return map_x, map_1, map_2
+
+    def init_weights(self):
+        self.up1.apply(init_weights)
+        self.up2.apply(init_weights)
+        self.final_x.apply(init_weights)
+        self.final_1.apply(init_weights)
+        self.final_2.apply(init_weights)
+        self.up_c.apply(init_weights)
+        self.up_c_1_1.apply(init_weights)
+        self.up_c_1_2.apply(init_weights)
+        self.up_c_2_1.apply(init_weights)
+        self.up_c_2_2.apply(init_weights)
+        
+
+class TransFuse_L_384(nn.Module):
+    def __init__(self, num_classes=1, drop_rate=0.2, normal_init=True, pretrained=False):
+        super(TransFuse_L_384, self).__init__()
+
+        self.resnet = resnet50()
+        if pretrained:
+            self.resnet.load_state_dict(torch.load('pretrained/resnet50-19c8e357.pth'))
+        self.resnet.fc = nn.Identity()
+        self.resnet.layer4 = nn.Identity()
+
+        self.transformer = deit_base_384(pretrained=pretrained)
+
+        self.up1 = Up(in_ch1=768, out_ch=512)
+        self.up2 = Up(512, 256)
+
+        self.final_x = nn.Sequential(
+            Conv(1024, 256, 1, bn=True, relu=True),
+            Conv(256, 256, 3, bn=True, relu=True),
+            Conv(256, num_classes, 3, bn=False, relu=False)
+            )
+
+        self.final_1 = nn.Sequential(
+            Conv(256, 256, 3, bn=True, relu=True),
+            Conv(256, num_classes, 3, bn=False, relu=False)
+            )
+
+        self.final_2 = nn.Sequential(
+            Conv(256, 256, 3, bn=True, relu=True),
+            Conv(256, num_classes, 3, bn=False, relu=False)
+            )
+
+        self.up_c = BiFusion_block(ch_1=1024, ch_2=768, r_2=4, ch_int=1024, ch_out=1024, drop_rate=drop_rate/2)
+
+        self.up_c_1_1 = BiFusion_block(ch_1=512, ch_2=512, r_2=2, ch_int=512, ch_out=512, drop_rate=drop_rate/2)
+        self.up_c_1_2 = Up(in_ch1=1024, out_ch=512, in_ch2=512, attn=True)
+
+        self.up_c_2_1 = BiFusion_block(ch_1=256, ch_2=256, r_2=1, ch_int=256, ch_out=256, drop_rate=drop_rate/2)
+        self.up_c_2_2 = Up(512, 256, 256, attn=True)
+
+        self.drop = nn.Dropout2d(drop_rate)
+
+        if normal_init:
+            self.init_weights()
+
+    def forward(self, imgs, labels=None):
+        # bottom-up path
+        x_b = self.transformer(imgs)
+        x_b = torch.transpose(x_b, 1, 2)
+        x_b = x_b.view(x_b.shape[0], -1, 24, 32)
+        x_b = self.drop(x_b)
+
+        x_b_1 = self.up1(x_b)
+        x_b_1 = self.drop(x_b_1)
+
+        x_b_2 = self.up2(x_b_1)  # transformer pred supervise here
+        x_b_2 = self.drop(x_b_2)
+
+
+        # top-down path
+        x_u = self.resnet.conv1(imgs)
+        x_u = self.resnet.bn1(x_u)
+        x_u = self.resnet.relu(x_u)
+        x_u = self.resnet.maxpool(x_u)
+
+        x_u_2 = self.resnet.layer1(x_u)
+        x_u_2 = self.drop(x_u_2)
+
+        x_u_1 = self.resnet.layer2(x_u_2)
+        x_u_1 = self.drop(x_u_1)
+
+        x_u = self.resnet.layer3(x_u_1)
+        x_u = self.drop(x_u)
+
+
+        # joint path
+        x_c = self.up_c(x_u, x_b)
+
+        x_c_1_1 = self.up_c_1_1(x_u_1, x_b_1)
+        x_c_1 = self.up_c_1_2(x_c, x_c_1_1)
+
+        x_c_2_1 = self.up_c_2_1(x_u_2, x_b_2)
+        x_c_2 = self.up_c_2_2(x_c_1, x_c_2_1) # joint predict low supervise here
+
+
+        # decoder part
+        map_x = F.interpolate(self.final_x(x_c), scale_factor=16, mode='bilinear', align_corners=True)
+        map_1 = F.interpolate(self.final_1(x_b_2), scale_factor=4, mode='bilinear', align_corners=True)
+        map_2 = F.interpolate(self.final_2(x_c_2), scale_factor=4, mode='bilinear', align_corners=True)
+
         return map_x, map_1, map_2
 
     def init_weights(self):
@@ -214,8 +425,11 @@ class Up(nn.Module):
             diffY = torch.tensor([x2.size()[2] - x1.size()[2]])
             diffX = torch.tensor([x2.size()[3] - x1.size()[3]])
 
-            x1 = F.pad(x1, [diffX // 2, diffX - diffX // 2,
-                            diffY // 2, diffY - diffY // 2])
+            # x1 = F.pad(x1, [diffX // 2, diffX - diffX // 2,
+            #                 diffY // 2, diffY - diffY // 2])
+            x1 = F.pad(x1,
+                       [torch.div(diffX, 2, rounding_mode='trunc'), diffX - torch.div(diffX, 2, rounding_mode='trunc'),
+                        torch.div(diffY, 2, rounding_mode='trunc'), diffY - torch.div(diffY, 2, rounding_mode='trunc')])
 
             if self.attn_block is not None:
                 x2 = self.attn_block(x1, x2)

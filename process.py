@@ -8,8 +8,8 @@ mask_f = ['ISIC-2017_Training_Part1_GroundTruth/', 'ISIC-2017_Validation_Part1_G
 set_size = [2000, 150, 600]
 save_name = ['train', 'val', 'test']
 
-height = 192
-width = 256
+height = 192 # 384
+width = 256 # 512
 
 for j in range(3):
 
