@@ -425,11 +425,8 @@ class Up(nn.Module):
             diffY = torch.tensor([x2.size()[2] - x1.size()[2]])
             diffX = torch.tensor([x2.size()[3] - x1.size()[3]])
 
-            # x1 = F.pad(x1, [diffX // 2, diffX - diffX // 2,
-            #                 diffY // 2, diffY - diffY // 2])
-            x1 = F.pad(x1,
-                       [torch.div(diffX, 2, rounding_mode='trunc'), diffX - torch.div(diffX, 2, rounding_mode='trunc'),
-                        torch.div(diffY, 2, rounding_mode='trunc'), diffY - torch.div(diffY, 2, rounding_mode='trunc')])
+            x1 = F.pad(x1, [diffX // 2, diffX - diffX // 2,
+                            diffY // 2, diffY - diffY // 2])
 
             if self.attn_block is not None:
                 x2 = self.attn_block(x1, x2)
