@@ -29,7 +29,7 @@ GPUs of memory>=4G shall be sufficient for this experiment.
 
 3. Training:
 	+ downloading DeiT-small from [DeiT repo](https://github.com/facebookresearch/deit) to `./pretrained`.
-	+ downloading resnet-34 from [timm Pytorch](https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/resnet34-43635321.pth) to `./pretrained`.
+	+ downloading resnet-34 from [timm Pytorch](https://download.pytorch.org/models/resnet34-333f7ec4.pth) to `./pretrained`.
 	+ run `train_isic.py`; you may also want to change the default saving path or other hparams as well.
 
 
